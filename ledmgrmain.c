@@ -36,6 +36,7 @@ extern "C"{
 #include "PRO_file.h"
 #include "conf_sec.h"
 #include "sysUtils.h"
+#include "secure_wrapper.h"
 #ifdef __cplusplus
 }
 #endif
@@ -346,11 +347,12 @@ static bool is_camera_connected()
     //if ((system("ping -c 3 8.8.8.8") == 0) || (wifiState == WIFI_CONNECTED))
     /* Changing ping to gateway instead of google server to determine status RDKC-6201 */
     char* gateway = getDefaultGateway();
-    char cmdbuf[256];
+    //char cmdbuf[256];
     if (gateway != NULL)
     {
-      snprintf(cmdbuf, sizeof(cmdbuf), "ping -c 3 %s -W 5 > /dev/null", gateway);
-      if (system(cmdbuf) == 0)
+      //snprintf(cmdbuf, sizeof(cmdbuf), "ping -c 3 %s -W 5 > /dev/null", gateway);
+      //if (system(cmdbuf) == 0)
+      if (v_secure_system("ping -c 3 %s -W 5 > /dev/null", gateway) == 0)
       {
         LEDMGR_LOG_DEBUG("Camera is connected");
         return true;

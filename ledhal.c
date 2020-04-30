@@ -32,6 +32,11 @@
 
 #include "ledmgrlogger.h"
 
+extern "C"
+{
+#include "secure_wrapper.h"
+}
+
 //config file path
 #define LED_CONFIG_FILE_PATH "/mnt/ramdisk/tmp/"
 #define LED_CONFIG_FILE_PREFIX ".LED_config_id_"
@@ -1272,8 +1277,10 @@ static int led_apply_lp5562_setting(Led_Config *led_config)
         //loading command
         snprintf(command,sizeof(command),"/bin/echo 1 > %s/firmware/lp5562/loading",LED_LP5562_DEVICE_PATH);
         system(command);
-        snprintf(command,sizeof(command),"/bin/echo \"%s\" > %s/firmware/lp5562/data",lp5562_program[i],LED_LP5562_DEVICE_PATH);
-        system(command);
+        //snprintf(command,sizeof(command),"/bin/echo \"%s\" > %s/firmware/lp5562/data",lp5562_program[i],LED_LP5562_DEVICE_PATH);
+        //system(command);
+        v_secure_system("/bin/echo %s > "LED_LP5562_DEVICE_PATH"/firmware/lp5562/data",lp5562_program[i]);
+        //v_secure_system("/bin/echo %s > %s/firmware/lp5562/data",lp5562_program[i],LED_LP5562_DEVICE_PATH);
         //end loading
         snprintf(command,sizeof(command),"/bin/echo 0 > %s/firmware/lp5562/loading",LED_LP5562_DEVICE_PATH);
         system(command);
