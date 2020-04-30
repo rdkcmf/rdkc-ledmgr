@@ -21,7 +21,7 @@
 <environment>
   <components>
     <ledmgr>
-     <dependencies>sdk, xwclient,rtmessage,sysapps</dependencies>
+     <dependencies>sdk, xwclient,rtmessage,sysapps,libsyswrapper</dependencies>
      <paths>
        <scripts>ledmgr/</scripts>
        <target>ledmgr/</target>

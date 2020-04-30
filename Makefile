@@ -21,6 +21,7 @@
 USE_SYSUTILS = yes
 SUPPORT_MXML = yes
 USE_RTMESSAGE = yes
+USE_LIBSYSWRAPPER = yes
 
 include ${RDK_PROJECT_ROOT_PATH}/utility/AppsRule.mak
 LDFLAGS = $(LIBFLAGS)
