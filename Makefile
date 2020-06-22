@@ -45,7 +45,7 @@ OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(SRCS))
 
 XWCLIENT_DIR_INC=$(BUILD_ROOT_DIR)/xwclient/
 
-CXXFLAGS += -std=c++11 -I$(XWCLIENT_DIR_INC)
+CXXFLAGS += -std=c++11 -I$(XWCLIENT_DIR_INC) -DENABLE_RTMESSAGE
 
 LED_MGR_SRC=ledtest.c
 LED_MGR_OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(LED_MGR_SRC))
