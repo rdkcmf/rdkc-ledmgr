@@ -28,7 +28,6 @@
 
 #include "ledmgr.h"
 #include "ledmgrlogger.h"
-#include "xwClientUtility.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -54,6 +53,8 @@ logLevel loglevelspecify=logLevel_Debug;
 #include "rtError.h"
 #define RTROUTED_ADDRESS "tcp://127.0.0.1:10001"
 #endif
+
+#include "ledmgr_rtmsg.h"
 
 /*! Event states associated with WiFi connection  */
 typedef enum _WiFiStatusCode_t {
@@ -476,17 +477,19 @@ static bool is_voice_out()
 
 int main(int argc, char* argv[])
 {
-
+  system("GetConfigFile /tmp/xw4.juc");
   int loop = 1;
   ledMgrState_t next_state = LED_MGR_STATE_BOOT_UP;
   ledMgrState_t cur_state = LED_MGR_STATE_UNKNOWN;
   ledMgrErr_t err;
+  rtConnection_Init();
+
   int xw_current_state = xw_isconnected();
   int xw_next_state = 0;
 
   ledmgr_init();
 
-#ifdef ENABLE_RTMESSAGE
+ #ifdef ENABLE_RTMESSAGE
   rtConnection_init();
 
   pthread_t wifiStateThread;
@@ -494,7 +497,7 @@ int main(int argc, char* argv[])
     { 
       LEDMGR_LOG_ERROR("Can't create thread.");
     }
-#endif
+ #endif
 
   do
   {
@@ -516,6 +519,8 @@ int main(int argc, char* argv[])
   pthread_kill(wifiStateThread, 0);
   rtConnection_destroy();
 #endif
+  
+  rtConnection_leddestroy();
 
   return 0;
 }

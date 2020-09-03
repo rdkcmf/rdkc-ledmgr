@@ -20,7 +20,7 @@
 # Add dependent libraries
 USE_SYSUTILS = yes
 SUPPORT_MXML = yes
-USE_RTMESSAGE = yes
+#USE_RTMESSAGE = yes
 USE_LIBSYSWRAPPER = yes
 
 include ${RDK_PROJECT_ROOT_PATH}/utility/AppsRule.mak
@@ -38,7 +38,7 @@ CC = @echo " [CXX] $<" ; $(CXX)
 endif
 #If platform is not RDKC, assign respective Cross Compiler path to CC
 
-SRCS = ledmgr.c ledmgrlogger.c ledhal.c
+SRCS = ledmgr.c ledmgrlogger.c ledhal.c ledmgr_rtmsg.c
 
 OBJDIR=obj
 OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(SRCS))
@@ -55,7 +55,8 @@ LED_MAIN_OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(LED_MAIN_SRC))
 
 all: ledtest ledmgrmain
 LDFLAGS += -lcurl
-LDFLAGS += -L$(BUILD_ROOT_DIR)/xwclient/ -Wl,-Bdynamic -lxwclient
+CXXFLAGS += -I$(RDK_PROJECT_ROOT_PATH)/libexchanger/rtmessage
+LDFLAGS += -L$(BUILD_ROOT_DIR)/libexchanger/rtmessage -lrtMessage -Wl,-rpath-link=${RDK_PROJECT_ROOT_PATH}/libexchanger/Release/src
 
 $(OBJDIR)/%.o: %.c
 	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)

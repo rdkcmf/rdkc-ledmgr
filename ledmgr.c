@@ -28,7 +28,7 @@
 
 #include "ledmgrlogger.h"
 #include "ledmgr.h"
-#include "ledHalClient.h"
+#include "ledmgr_rtmsg.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -171,20 +171,20 @@ ledMgrErr_t led_xw_init(int retry)
 
   while (count <= retry)
   {
-    system("configparamgen jx /.ssh/sshevyzis.juc /tmp/xw4_key");
     /* To avoid reading xw system.conf on every boot, we store it locally */
     if (access("/opt/usr_config/xwsystem.conf", F_OK) != 0)
     {
-      /* exec_sys_command returns error statement that fills buffer so reverted to system command */
-      int ret = system("scp -i /tmp/xw4_key root@169.254.99.8:/mnt/ramdisk/system.conf /opt/usr_config/xwsystem.conf");
-      LEDMGR_LOG_INFO("\nsystem.conf copied from xw : %d", ret);
-      if (ret != 0)
-      { 
-        LEDMGR_LOG_INFO("system.conf not available check again count : %d", count);
-        //sleep (1);
-        count++;
-        continue;
+
+      int retval=0;
+      retval = xw_file_get();
+      if(retval != 1)
+      {
+       LEDMGR_LOG_INFO("system.conf not available check again count : %d", count);
+       count++;
+       continue;
       }
+      if(retval ==1)
+          LEDMGR_LOG_INFO("\nsystem.conf copied from xw sucessfully ");
     }
     else
     {

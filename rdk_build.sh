@@ -136,10 +136,11 @@ function install()
        cp ledmgrmain ${RDK_FSROOT_PATH}/usr/bin
     fi
 }
+
 # run the logic
 #these args are what left untouched after parse_args
 HIT=false
-for i in "$ARGS"; do
+for i in "$@"; do
     case $i in
         configure)  HIT=true; configure ;;
         clean)      HIT=true; clean ;;
