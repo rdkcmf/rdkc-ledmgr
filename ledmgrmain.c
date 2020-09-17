@@ -199,7 +199,11 @@ void* rtMessage_StatusReceive(void* arg)
   {
     rtError err = rtConnection_Dispatch(led_con);
     if (err != RT_OK)
-      LEDMGR_LOG_INFO("Dispatch Error: %s", rtStrError(err));
+    {
+      LEDMGR_LOG_DEBUG("Dispatch Error: %s", rtStrError(err));
+    }
+    //Adding sleep to avoid logs flooding in case of rtrouted bad state
+    usleep(10000);
   }
 }
 #endif
