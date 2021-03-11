@@ -5,16 +5,8 @@
 
 void rtConnection_Init()
 {
-	int ret;
-	rtLog_SetLevel(RT_LOG_DEBUG);
 	LEDMGR_LOG_INFO("Led Communicates via secure path \n");
 	rtConnection_Create(&con, "XCAM_LED", "tcp://127.0.0.1:10001");
-	ret=ensureReceiver_Connectivity(con,"ZXC2LEDPROVIDER.INBOX");
-	if(ret==0)
-	{
-		rtConnection_Destroy(con);
-		rtConnection_Create(&con, "XCAM_LED", "tcp://127.0.0.1:10001");
-	}
 }
 
 void rtConnection_leddestroy()
