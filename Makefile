@@ -20,7 +20,8 @@
 # Add dependent libraries
 USE_SYSUTILS = yes
 SUPPORT_MXML = yes
-#USE_RTMESSAGE = yes
+USE_DATAPROVIDER = no
+USE_RTMESSAGE = yes
 USE_LIBSYSWRAPPER = yes
 
 include ${RDK_PROJECT_ROOT_PATH}/utility/AppsRule.mak
@@ -55,8 +56,6 @@ LED_MAIN_OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(LED_MAIN_SRC))
 
 all: ledtest ledmgrmain
 LDFLAGS += -lcurl
-CXXFLAGS += -I$(RDK_PROJECT_ROOT_PATH)/libexchanger/rtmessage
-LDFLAGS += -L$(BUILD_ROOT_DIR)/libexchanger/rtmessage -lrtMessage -Wl,-rpath-link=${RDK_PROJECT_ROOT_PATH}/libexchanger/Release/src
 
 $(OBJDIR)/%.o: %.c
 	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
