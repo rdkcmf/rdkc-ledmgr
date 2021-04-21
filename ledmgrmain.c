@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/sysinfo.h>
 
 #include "ledmgr.h"
 #include "ledmgrlogger.h"
@@ -36,11 +37,13 @@ extern "C"{
 #include "conf_sec.h"
 #include "sysUtils.h"
 #include "secure_wrapper.h"
+#include "connectivity_finder.h"
 #ifdef __cplusplus
 }
 #endif
 
 #define DEF_USER_ADMIN_NAME              "administrator"
+#define WIFI_PAUSE_STATE_FILE            "/tmp/.wifipaused"
 
 logDest logdestination=logDest_Rdk;
 logLevel loglevelspecify=logLevel_Debug;
@@ -74,13 +77,18 @@ static ledMgrState_t not_provisioned_st_handler(void);
 static ledMgrState_t trouble_connect_st_handler(void);
 static ledMgrState_t working_normally_st_handler(void);
 static ledMgrState_t two_way_voice_st_handler(void);
-static ledMgrState_t factory_dw_mode_st_handler(void) ;
+static ledMgrState_t factory_dw_mode_st_handler(void);
+static ledMgrState_t wifi_pause_st_handler(void);
 
 static void logLevelFromString(char const* s);
 static void logDestinationFromString(char const* s);
 
 int bt_state = 0;
 int audio_state = 0;
+
+MODE state;
+int pause_count = 0;
+int disconnect_count = 0;
 
 #ifdef ENABLE_RTMESSAGE
 static rtConnection led_con = NULL;
@@ -100,6 +108,7 @@ static bool is_camera_not_provisioned_onboard();
 static bool is_camera_not_provisioned();
 static bool is_camera_booting_up();
 static bool is_voice_out();
+static bool is_wifi_paused();
 //static bool is_xw_connected();
 
 static WiFiStatusCode_t wifiState = WIFI_UNINSTALLED;
@@ -110,6 +119,7 @@ ledMgrState_t (*get_next_state[LED_MGR_STATE_UNKNOWN])(void) = {
                     ready_to_pair_st_handler,     //LED_MGR_STATE_READY_TO_PAIR
                     not_provisioned_st_handler,   //LED_MGR_STATE_NOT_PROVISIONED
                     trouble_connect_st_handler,   //LED_MGR_STATE_TROUBLE_CONNECTING
+                    wifi_pause_st_handler,	  //LED_MGR_STATE_WIFI_PAUSED
                     working_normally_st_handler,  //LED_MGR_STATE_WORKING_NORMALLY
                     two_way_voice_st_handler,     //LED_MGR_STATE_2_WAY_VOICE
                     factory_dw_mode_st_handler    //LED_MGR_STATE_FACTORY_DOWNLOAD_MODE
@@ -250,6 +260,10 @@ static ledMgrState_t ready_to_pair_st_handler(void)
     {
         state = LED_MGR_STATE_READY_TO_PAIR;
     }
+    else if(bt_state && is_wifi_paused() && !is_camera_not_provisioned())
+    {
+        state = LED_MGR_STATE_WIFI_PAUSED;
+    }
     else if(!is_camera_not_provisioned_onboard() && is_camera_not_online())
     {
         state = LED_MGR_STATE_TROUBLE_CONNECTING;
@@ -294,9 +308,41 @@ static ledMgrState_t trouble_connect_st_handler(void)
     {
         state = LED_MGR_STATE_READY_TO_PAIR;
     }
-    else if(is_camera_connected())
+    else if(is_wifi_paused())
+    {
+        state = LED_MGR_STATE_WIFI_PAUSED;
+    }
+    else if(!is_wifi_paused() && is_camera_connected())
     {
         state = LED_MGR_STATE_WORKING_NORMALLY;
+    }
+
+    return state;
+}
+
+static ledMgrState_t wifi_pause_st_handler(void)
+{
+    //Turn off IR Led, Speaker, Microphone and touch pause state file
+    if (access(WIFI_PAUSE_STATE_FILE, F_OK) != 0)
+      system("sh /lib/rdk/wifi_pause_state.sh 1 &");
+
+    ledMgrState_t state = LED_MGR_STATE_WIFI_PAUSED;
+
+    if (bt_state)
+    {
+        state = LED_MGR_STATE_READY_TO_PAIR;
+    }
+    else if(!is_wifi_paused() && is_camera_not_online())
+    {
+        state = LED_MGR_STATE_TROUBLE_CONNECTING;
+    }
+    else if(!is_wifi_paused() && is_camera_connected())
+    {
+        state = LED_MGR_STATE_WORKING_NORMALLY;
+    }
+    else if(!is_wifi_paused() && is_voice_out())
+    {
+        state = LED_MGR_STATE_2_WAY_VOICE;
     }
 
     return state;
@@ -311,11 +357,15 @@ static ledMgrState_t working_normally_st_handler(void)
     {
         state = LED_MGR_STATE_READY_TO_PAIR;
     }
+    else if(is_wifi_paused() && !is_voice_out())
+    {
+        state = LED_MGR_STATE_WIFI_PAUSED;
+    }
     else if(is_camera_not_online() && !is_voice_out())
     {
         state = LED_MGR_STATE_TROUBLE_CONNECTING;
     }
-    else if(is_voice_out())
+    else if(!is_wifi_paused() && is_voice_out())
     {
         state = LED_MGR_STATE_2_WAY_VOICE;
     }
@@ -327,7 +377,11 @@ static ledMgrState_t two_way_voice_st_handler(void)
 {
     ledMgrState_t state = LED_MGR_STATE_2_WAY_VOICE;
 
-    if(is_camera_connected() && !is_voice_out())
+    if(is_wifi_paused() && !is_voice_out())
+    {
+        state = LED_MGR_STATE_WIFI_PAUSED;
+    }
+    else if(is_camera_connected() && !is_voice_out())
     {
         state = LED_MGR_STATE_WORKING_NORMALLY;
     }
@@ -349,22 +403,56 @@ static ledMgrState_t factory_dw_mode_st_handler(void)
 
 static bool is_camera_connected()
 {
-    //if ((system("ping -c 3 8.8.8.8") == 0) || (wifiState == WIFI_CONNECTED))
-    /* Changing ping to gateway instead of google server to determine status RDKC-6201 */
-    char* gateway = getDefaultGateway();
-    //char cmdbuf[256];
-    if (gateway != NULL)
+    if (state == CONNECTED_STATE)
     {
-      //snprintf(cmdbuf, sizeof(cmdbuf), "ping -c 3 %s -W 5 > /dev/null", gateway);
-      //if (system(cmdbuf) == 0)
-      if (v_secure_system("ping -c 3 %s -W 5 > /dev/null", gateway) == 0)
+      LEDMGR_LOG_DEBUG("Camera is connected");
+      // Remove wifi pause state file,turn speaker, microphone on when wifi is unpaused
+      if (access(WIFI_PAUSE_STATE_FILE, F_OK) != -1)
+        system("sh /lib/rdk/wifi_pause_state.sh 0 &");
+      if (pause_count != 0)
+        pause_count = 0;
+      if (disconnect_count != 0)
+        disconnect_count = 0;
+    }
+    else if (state == DISCONNECTED_STATE)
+    {
+      if (pause_count != 0)
+        pause_count = 0;
+      if (disconnect_count >= 5)
       {
-        LEDMGR_LOG_DEBUG("Camera is connected");
+        LEDMGR_LOG_DEBUG("Camera is not connected");
+        return false;
+      }
+      else
+        disconnect_count++;
+    }
+    return true;
+}
+
+static bool is_wifi_paused()
+{
+    if (state == PAUSE_STATE)
+    {
+      if (disconnect_count != 0)
+        disconnect_count = 0;
+      if (pause_count >= 5)
+      {
+        LEDMGR_LOG_DEBUG("Wifi is paused");
         return true;
       }
+      else
+        pause_count++;
     }
-    LEDMGR_LOG_DEBUG("Camera is not connected");
-    return false;   
+    else
+    {
+      if (pause_count != 0)
+        pause_count = 0;
+      LEDMGR_LOG_DEBUG("Wifi is not paused");
+      // Remove wifi pause state file ,turn speaker, microphone on once wifi is unpaused
+      if (access(WIFI_PAUSE_STATE_FILE, F_OK) != -1)
+        system("sh /lib/rdk/wifi_pause_state.sh 0 &");
+    }
+    return false;
 }
 
 static bool is_camera_pairing_mode()
@@ -502,6 +590,8 @@ int main(int argc, char* argv[])
   do
   {
     xw_next_state = xw_isconnected();
+    /* Captive portal call to check wifi status */
+    state = stateFinder();
     if ((next_state != cur_state) || (xw_current_state != xw_next_state))
     {
         LEDMGR_LOG_INFO("Current state %d Next state %d ", cur_state, next_state);
@@ -512,7 +602,7 @@ int main(int argc, char* argv[])
         xw_current_state = xw_next_state;
     }
     next_state = (*get_next_state[cur_state])();
-    sleep(1); //one second sleep
+    sleep(2); //one second sleep
   }while(loop == 1);
 
 #ifdef ENABLE_RTMESSAGE  
