@@ -383,12 +383,6 @@ ledMgrErr_t ledmgr_setState(ledMgrState_t state)
       led_xw_setOp(LED_ID_XW_FRONT_PANEL, LED_MGR_OP_BLINK, LED_MGR_COLOR_AMBER);
       LEDMGR_LOG_INFO("Led State = LED_MGR_STATE_NOT_PROVISIONED");
       break;
-    case LED_MGR_STATE_WIFI_PAUSED:
-      /* Camera wifi paused */
-      ledmgr_setOp(LED_ID_CAMERA_FRONT_PANEL, LED_MGR_OP_NO_LIGHT, LED_MGR_COLOR_WHITE);
-      led_xw_setOp(LED_ID_XW_FRONT_PANEL, LED_MGR_OP_NO_LIGHT, LED_MGR_COLOR_WHITE);
-      LEDMGR_LOG_INFO("Led State = LED_MGR_STATE_WIFI_PAUSED");
-      break;
     case LED_MGR_STATE_WORKING_NORMALLY:
       /* working normally */
       ledmgr_setOp(LED_ID_CAMERA_FRONT_PANEL, LED_MGR_OP_SOLID_LIGHT, LED_MGR_COLOR_BLUE);
