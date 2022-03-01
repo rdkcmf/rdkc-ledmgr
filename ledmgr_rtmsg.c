@@ -89,7 +89,7 @@ int xw_led_init(int ledId)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_init");
@@ -119,7 +119,7 @@ int xw_led_reset(int ledId)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_reset");
@@ -149,7 +149,7 @@ int xw_led_resetAll()
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_resetAll");
@@ -178,7 +178,7 @@ int xw_led_setEnable(int ledid,int enable)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_setEnable");
@@ -209,7 +209,7 @@ int xw_led_setColor(int ledid,uint8_t R, uint8_t G, uint8_t B)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_Color");
@@ -243,7 +243,7 @@ int xw_led_setBrightness(int ledid,uint8_t R, uint8_t G, uint8_t B)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_setBrightness");
@@ -277,7 +277,7 @@ int xw_led_setBlink(int ledid,uint32_t offtime, uint32_t ontime)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_setBlink");
@@ -310,7 +310,7 @@ int xw_led_setBlinkSequence(int ledid,uint32_t ontime, uint32_t offtime1, uint32
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_setBlinkSequence");
@@ -344,7 +344,7 @@ int xw_led_setOnOff(int ledid,const char* onoff)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval,ret;
+	int retval=0,ret=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_setOnOff");
@@ -376,7 +376,7 @@ int xw_led_applySettings(int ledid)
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_applySettings");
@@ -407,7 +407,7 @@ int xw_led_applyAllSettings()
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_led_applyAllSettings");
@@ -437,8 +437,8 @@ int xw_led_getErrorMsg()
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
-	int errval;
+	int retval=0;
+	int errval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_ledgetErrorMsg");
@@ -468,7 +468,7 @@ int xw_led_getVersion()
 	rtMessage res=NULL;
 	rtMessage req=NULL;
 	rtError err;
-	int retval;
+	int retval=0;
 	char const* state = NULL;
 	rtMessage_Create(&req);
 	rtMessage_SetString(req, "fname", "xw_ledgetVersion");
