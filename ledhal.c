@@ -78,6 +78,11 @@ extern "C"
 #define LED_LP5562_DEVICE_PATH "/sys/devices/e8000000.apb/e8007000.i2c/i2c-2/2-0030"
 #define LED_LP5562_I2C_DEVICE "/dev/i2c-2"
 
+//AW210XX device path
+#define LEDS_CHIP_AW210XX_FILE "/tmp/.led_aw210xx"
+#define RGBCOLOR  "/sys/devices/e8000000.apb/e8007000.i2c/i2c-2/2-0020/leds/aw210xx_led/rgbcolor"
+#define REG  "/sys/devices/e8000000.apb/e8007000.i2c/i2c-2/2-0020/leds/aw210xx_led/reg"
+
 //current register address of LP5562
 #define LED_LP5562_R_CURRENT_REG 0x07
 #define LED_LP5562_G_CURRENT_REG 0x06
@@ -127,10 +132,10 @@ typedef struct Led_Action{
  * @member variable current  : current of the channel
  * @member variable pwm      : pwm of the channel
 */
-typedef struct LP5562_Channel{
+typedef struct LEDCHIP_Channel{
     uint8_t current;
     uint8_t pwm;
-}LP5562_Channel;
+}LEDCHIP_Channel;
 
 /**
  * @brief LED chip LP5562
@@ -139,9 +144,9 @@ typedef struct LP5562_Channel{
  * we set channel[0] control Red, channel[1] control Green, channel[2] control Blue.
  * @member variable channel : channels of LP5562
 */
-typedef struct Led_LP5562{
-    LP5562_Channel channel[3]; //LED chip LP5562 has 3 channels
-}Led_LP5562;
+typedef struct Led_CHIP{
+    LEDCHIP_Channel channel[3]; //LED chip LP5562 has 3 channels
+}Led_CHIP;
 
 /**
  * @brief LED IR LED
@@ -157,12 +162,12 @@ typedef struct Led_IRLED{
  * @brief Config of LED
  * This structure define config of LED
  * member variable state       : state of LED, 0 -- disable, 1 -- disable, if LED is disabled, you cannot set it's config
- * member variable led_lp5562  : config of LED chip LP5562 
+ * member variable led_chip  : config of LED chip  
  * member variable led_irled   : config of IR LED
 */
 typedef struct Led_Config{
     int state; //0:disable, 1:enable
-    Led_LP5562 led_lp5562;
+    Led_CHIP led_chip;
     Led_IRLED led_irled;
 	Led_Action	action; 
 }Led_Config;
@@ -323,14 +328,14 @@ ledError_t led_init(ledId_t id)
     {
         led_config.state = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_STATE;
         //R channel
-        led_config.led_lp5562.channel[0].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_CURRENT;
-        led_config.led_lp5562.channel[0].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_PWM;
+        led_config.led_chip.channel[0].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_CURRENT;
+        led_config.led_chip.channel[0].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_PWM;
         //G channel
-        led_config.led_lp5562.channel[1].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_CURRENT;
-        led_config.led_lp5562.channel[1].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_PWM;
+        led_config.led_chip.channel[1].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_CURRENT;
+        led_config.led_chip.channel[1].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_PWM;
         //B channel
-        led_config.led_lp5562.channel[2].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_CURRENT;
-        led_config.led_lp5562.channel[2].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_PWM;
+        led_config.led_chip.channel[2].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_CURRENT;
+        led_config.led_chip.channel[2].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_PWM;
 		//default, turn on xCam2 front Led
 		led_config.action.act_type = Led_ON;
     }
@@ -338,14 +343,14 @@ ledError_t led_init(ledId_t id)
     {
         led_config.state = LED_CONFIG_DEF_XW_FRONT_PANEL_STATE;
         //R channel
-        led_config.led_lp5562.channel[0].current = LED_CONFIG_DEF_XW_FRONT_PANEL_R_CURRENT;
-        led_config.led_lp5562.channel[0].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_R_PWM;
+        led_config.led_chip.channel[0].current = LED_CONFIG_DEF_XW_FRONT_PANEL_R_CURRENT;
+        led_config.led_chip.channel[0].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_R_PWM;
         //G channel
-        led_config.led_lp5562.channel[1].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_G_CURRENT;
-        led_config.led_lp5562.channel[1].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_G_PWM;
+        led_config.led_chip.channel[1].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_G_CURRENT;
+        led_config.led_chip.channel[1].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_G_PWM;
         //B channel
-        led_config.led_lp5562.channel[2].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_B_CURRENT;
-        led_config.led_lp5562.channel[2].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_B_PWM;
+        led_config.led_chip.channel[2].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_B_CURRENT;
+        led_config.led_chip.channel[2].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_B_PWM;
 		//defalut, turn on XW4 front Led
 		led_config.action.act_type = Led_ON;
     }
@@ -408,14 +413,14 @@ ledError_t led_reset(ledId_t id)
     {
         led_config.state = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_STATE;
         //R channel
-        led_config.led_lp5562.channel[0].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_CURRENT;
-        led_config.led_lp5562.channel[0].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_PWM;
+        led_config.led_chip.channel[0].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_CURRENT;
+        led_config.led_chip.channel[0].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_R_PWM;
         //G channel
-        led_config.led_lp5562.channel[1].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_CURRENT;
-        led_config.led_lp5562.channel[1].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_PWM;
+        led_config.led_chip.channel[1].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_CURRENT;
+        led_config.led_chip.channel[1].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_G_PWM;
         //B channel
-        led_config.led_lp5562.channel[2].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_CURRENT;
-        led_config.led_lp5562.channel[2].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_PWM;
+        led_config.led_chip.channel[2].current = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_CURRENT;
+        led_config.led_chip.channel[2].pwm = LED_CONFIG_DEF_CAMERA_FRONT_PANEL_B_PWM;
 		//default, turn on xCam2 front Led
 		led_config.action.act_type = Led_ON;
     }
@@ -423,14 +428,14 @@ ledError_t led_reset(ledId_t id)
     {
         led_config.state = LED_CONFIG_DEF_XW_FRONT_PANEL_STATE;
         //R channel
-        led_config.led_lp5562.channel[0].current = LED_CONFIG_DEF_XW_FRONT_PANEL_R_CURRENT;
-        led_config.led_lp5562.channel[0].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_R_PWM;
+        led_config.led_chip.channel[0].current = LED_CONFIG_DEF_XW_FRONT_PANEL_R_CURRENT;
+        led_config.led_chip.channel[0].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_R_PWM;
         //G channel
-        led_config.led_lp5562.channel[1].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_G_CURRENT;
-        led_config.led_lp5562.channel[1].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_G_PWM;
+        led_config.led_chip.channel[1].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_G_CURRENT;
+        led_config.led_chip.channel[1].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_G_PWM;
         //B channel
-        led_config.led_lp5562.channel[2].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_B_CURRENT;
-        led_config.led_lp5562.channel[2].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_B_PWM;
+        led_config.led_chip.channel[2].current =  LED_CONFIG_DEF_XW_FRONT_PANEL_B_CURRENT;
+        led_config.led_chip.channel[2].pwm = LED_CONFIG_DEF_XW_FRONT_PANEL_B_PWM;
 		//default, turn on XW4 front Led
 		led_config.action.act_type = Led_ON;
     }
@@ -613,9 +618,9 @@ ledError_t led_setColor(ledId_t id, uint8_t R, uint8_t G, uint8_t B)
         return LED_ERR_OPERATION_NOT_SUPPORTED;
     }
     //update LED config
-    led_config.led_lp5562.channel[0].current = R;
-    led_config.led_lp5562.channel[1].current = G;
-    led_config.led_lp5562.channel[2].current = B;
+    led_config.led_chip.channel[0].current = R;
+    led_config.led_chip.channel[1].current = G;
+    led_config.led_chip.channel[2].current = B;
     //write LED config
     ret = write_led_config(config_fd,&led_config);
     flock(config_fd,LOCK_UN);//unlock
@@ -682,9 +687,9 @@ ledError_t led_setBrightness(ledId_t id, uint8_t R, uint8_t G, uint8_t B)
     //update LED config
     if ((LED_ID_CAMERA_FRONT_PANEL == id) || (LED_ID_XW_FRONT_PANEL == id))
     {
-        led_config.led_lp5562.channel[0].pwm = R;
-        led_config.led_lp5562.channel[1].pwm = G;
-        led_config.led_lp5562.channel[2].pwm = B;
+        led_config.led_chip.channel[0].pwm = R;
+        led_config.led_chip.channel[1].pwm = G;
+        led_config.led_chip.channel[2].pwm = B;
     }
     else
     {
@@ -1053,7 +1058,7 @@ static void led_transfer_command_to_lp5562_program(Led_Config *led_config, char 
     	{
 			command_num = 0;
 
-        	snprintf(program[index],LED_LP5562_COMMAND_LEN,"40%02X",led_config->led_lp5562.channel[index].pwm);//turn on
+        	snprintf(program[index],LED_LP5562_COMMAND_LEN,"40%02X",led_config->led_chip.channel[index].pwm);//turn on
         	command_num++;
         	if (on_wait_loop_time > 0)
         	{
@@ -1117,7 +1122,7 @@ static void led_transfer_command_to_lp5562_program(Led_Config *led_config, char 
 		{
 
 			command_num = 0;
-			snprintf(program[index],LED_LP5562_COMMAND_LEN,"40%02X",led_config->led_lp5562.channel[index].pwm);//turn on
+			snprintf(program[index],LED_LP5562_COMMAND_LEN,"40%02X",led_config->led_chip.channel[index].pwm);//turn on
 			command_num++;
 			if (on_wait_loop_time > 0)
 			{
@@ -1214,7 +1219,7 @@ static void led_transfer_command_to_lp5562_program(Led_Config *led_config, char 
 	{
 		for (index = 0; index < 3; index++)
 		{
-			snprintf(program[index],LED_LP5562_COMMAND_LEN,"40%02XD000",led_config->led_lp5562.channel[index].pwm);
+			snprintf(program[index],LED_LP5562_COMMAND_LEN,"40%02XD000",led_config->led_chip.channel[index].pwm);
 		}
 	}
 
@@ -1252,9 +1257,9 @@ static int led_apply_lp5562_setting(Led_Config *led_config)
 
     if ((ioctl(lp5562_fd, I2C_FUNCS, &funcs) >=0) && (ioctl(lp5562_fd, I2C_SLAVE_FORCE, 0x30) >= 0))
     {
-        i2c_smbus_write_byte_data(lp5562_fd, LED_LP5562_R_CURRENT_REG, led_config->led_lp5562.channel[0].current);
-        i2c_smbus_write_byte_data(lp5562_fd, LED_LP5562_G_CURRENT_REG, led_config->led_lp5562.channel[1].current);
-        i2c_smbus_write_byte_data(lp5562_fd, LED_LP5562_B_CURRENT_REG, led_config->led_lp5562.channel[2].current);
+        i2c_smbus_write_byte_data(lp5562_fd, LED_LP5562_R_CURRENT_REG, led_config->led_chip.channel[0].current);
+        i2c_smbus_write_byte_data(lp5562_fd, LED_LP5562_G_CURRENT_REG, led_config->led_chip.channel[1].current);
+        i2c_smbus_write_byte_data(lp5562_fd, LED_LP5562_B_CURRENT_REG, led_config->led_chip.channel[2].current);
     }
     else
     {
@@ -1289,6 +1294,39 @@ static int led_apply_lp5562_setting(Led_Config *led_config)
     snprintf(command,sizeof(command),"/bin/echo 1 > %s/run_engine",LED_LP5562_DEVICE_PATH);
     system(command);
     close(lp5562_fd);
+
+    return 0;
+}
+
+static int led_apply_aw21009_setting(Led_Config *led_config)
+{
+    char command[512] = {0};
+    char led_color[10] = {0};
+    char led_brightness[10] = {0};
+
+    snprintf(led_color,sizeof(led_color),"0x%02x%02x%02x", led_config->led_chip.channel[0].current, led_config->led_chip.channel[1].current, led_config->led_chip.channel[2].current);
+    snprintf(led_brightness,sizeof(led_brightness),"0x%02x%02x%02x", led_config->led_chip.channel[0].pwm, led_config->led_chip.channel[1].pwm, led_config->led_chip.channel[2].pwm);
+
+    if (Led_ON == led_config->action.act_type)
+    {
+        snprintf(command,sizeof(command),"/bin/echo 0x00 %s %s > %s &", led_color, led_brightness, RGBCOLOR);
+        system(command);
+    }
+    if (Led_OFF == led_config->action.act_type)
+    {
+        snprintf(command,sizeof(command),"echo 0x00 0x000000 0x000000 > %s &", RGBCOLOR);
+        system(command);
+    }
+    if (Led_BLINK == led_config->action.act_type)
+    {
+        snprintf(command,sizeof(command),"/etc/led_functions.sh brightness_blink %d:%d,%d:%d,%d:%d %d %d &", led_config->led_chip.channel[0].current, led_config->led_chip.channel[0].pwm, led_config->led_chip.channel[1].current, led_config->led_chip.channel[1].pwm, led_config->led_chip.channel[2].current, led_config->led_chip.channel[2].pwm, (led_config->action.on_time)*1000, (led_config->action.off_time)*1000);
+        system(command);
+    }
+    if (Led_SEQ_BLINK == led_config->action.act_type)
+    {
+        snprintf(command,sizeof(command),"/etc/led_functions.sh sequence_blink %d:%d,%d:%d,%d:%d  %d %d %d %d &",led_config->led_chip.channel[0].current, led_config->led_chip.channel[0].pwm, led_config->led_chip.channel[1].current, led_config->led_chip.channel[1].pwm, led_config->led_chip.channel[2].current, led_config->led_chip.channel[2].pwm, (led_config->action.on_time)*1000, (led_config->action.off1_time)*1000, led_config->action.count, (led_config->action.off2_time)*1000);
+        system(command);
+    }
 
     return 0;
 }
@@ -1344,7 +1382,15 @@ ledError_t led_applySettings(ledId_t id)
 	//take action 
     if ((LED_ID_CAMERA_FRONT_PANEL == id) || (LED_ID_XW_FRONT_PANEL == id))
     {
-        ret = led_apply_lp5562_setting(&led_config);
+        if (0 == access(LEDS_CHIP_AW210XX_FILE, F_OK))
+        {
+            system("kill -9 $(ps | grep led_functions | grep -v grep | awk -F ' ' '{print $1}') > /dev/null 2> /dev/null");
+            ret = led_apply_aw21009_setting(&led_config);
+        }
+        else
+        {
+            ret = led_apply_lp5562_setting(&led_config);
+        }
     }
     else
     {
