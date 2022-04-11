@@ -23,6 +23,7 @@ SUPPORT_MXML = yes
 USE_DATAPROVIDER = no
 USE_RTMESSAGE = yes
 USE_LIBSYSWRAPPER = yes
+USE_BREAKPAD = yes
 
 include ${RDK_PROJECT_ROOT_PATH}/utility/AppsRule.mak
 LDFLAGS = $(LIBFLAGS)
@@ -46,7 +47,7 @@ OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(SRCS))
 
 XWCLIENT_DIR_INC=$(BUILD_ROOT_DIR)/xwclient/
 
-CXXFLAGS += -std=c++11 -I$(XWCLIENT_DIR_INC) -DENABLE_RTMESSAGE
+CXXFLAGS += -g -std=c++11 -I$(XWCLIENT_DIR_INC) -DENABLE_RTMESSAGE
 
 LED_MGR_SRC=ledtest.c
 LED_MGR_OBJS=$(patsubst %.c, $(OBJDIR)/%.o, $(LED_MGR_SRC))
@@ -59,7 +60,7 @@ LDFLAGS += -lcurl
 
 $(OBJDIR)/%.o: %.c
 	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)
-	$(CC) -c $(CXXFLAGS) $< -o $@
+	$(CC) -c -g -std=c++11 -Wextra $(CXXFLAGS) $< -o $@
 
 libledmgr.so: $(OBJS)
 	@[ -d $(OBJDIR) ] || mkdir -p $(OBJDIR)

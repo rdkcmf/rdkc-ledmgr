@@ -33,6 +33,7 @@ export COMBINED_ROOT=$RDK_PROJECT_ROOT_PATH
 
 # path to build script (this script)
 export RDK_SCRIPTS_PATH=${RDK_SCRIPTS_PATH-`readlink -m $0 | xargs dirname`}
+export RDK_TOOLCHAIN_PATH=${RDK_TOOLCHAIN_PATH-`readlink -m $RDK_PROJECT_ROOT_PATH/sdk/toolchain/staging_dir`}
 
 # path to components sources and target
 export RDK_SOURCE_PATH=${RDK_SOURCE_PATH-`readlink -m .`}
@@ -52,6 +53,13 @@ elif [ "$XCAM_MODEL" == "SERXW3" ] || [ "$XCAM_MODEL" == "SERICAM2" ]; then
 . ${RDK_PROJECT_ROOT_PATH}/build/components/sdk/setenv2
 else #No Matching platform
     echo "Source environment that include packages for your platform. The environment variables PROJ_PRERULE_MAK_FILE should refer to the platform s PreRule make"
+fi
+
+if [ "$XCAM_MODEL" != "XHB1" ];then
+export RDK_DUMP_SYMS=${RDK_PROJECT_ROOT_PATH}/utility/prebuilts/breakpad-prebuilts/x86/dump_syms
+export STRIP=${RDK_TOOLCHAIN_PATH}/arm-linux-gnueabihf/bin/arm-linux-gnueabihf-strip
+else
+export RDK_DUMP_SYMS=${RDK_PROJECT_ROOT_PATH}/utility/prebuilts/breakpad-prebuilts/x64/dump_syms
 fi
 
 # parse arguments
@@ -124,6 +132,12 @@ function rebuild()
 function install()
 {
     cd ${RDK_SOURCE_PATH}
+    cp ledmgrmain ledmgrmain_debug
+
+    $RDK_DUMP_SYMS ledmgrmain > ledmgrmain.sym
+    mv *.sym $PLATFORM_SYMBOL_PATH
+    echo "Debug symbol created for ledmgr"
+
     if [ -f "libledmgr.so" ]; then
        cp libledmgr.so ${RDK_FSROOT_PATH}/usr/lib
     fi

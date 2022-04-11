@@ -39,6 +39,9 @@ extern "C"{
 #ifdef __cplusplus
 }
 #endif
+#ifdef BREAKPAD
+#include "breakpadwrap.h"
+#endif
 
 #define DEF_USER_ADMIN_NAME              "administrator"
 
@@ -364,7 +367,7 @@ static bool is_camera_connected()
       }
     }
     LEDMGR_LOG_DEBUG("Camera is not connected");
-    return false;   
+    return false;
 }
 
 static bool is_camera_pairing_mode()
@@ -482,6 +485,13 @@ int main(int argc, char* argv[])
   ledMgrState_t next_state = LED_MGR_STATE_BOOT_UP;
   ledMgrState_t cur_state = LED_MGR_STATE_UNKNOWN;
   ledMgrErr_t err;
+
+#ifdef BREAKPAD
+    sleep(1);
+    BreakPadWrapExceptionHandler eh;
+    eh = newBreakPadWrapExceptionHandler();
+#endif
+
   rtConnection_Init();
 
   int xw_current_state = xw_isconnected();
