@@ -45,7 +45,10 @@ extern "C"{
 #define LEDMGR_ASSERT_NOT_NULL(P)       if ((P) == NULL) return LED_MGR_ERR_GENERAL
 #define DEF_USER_ADMIN_NAME              "administrator"
 #define XW_INIT_MAX_RETRY                 25
- 
+
+/* Telemetry 2.0 */
+#include "telemetry_busmessage_sender.h"
+
 typedef struct ledRGBColor{
   ledMgrColor_t color;
   uint8_t cR;     /* Red color */
@@ -376,6 +379,7 @@ ledMgrErr_t ledmgr_setState(ledMgrState_t state)
       ledmgr_setOp(LED_ID_CAMERA_FRONT_PANEL, LED_MGR_OP_BLINK, LED_MGR_COLOR_AMBER);
       led_xw_setOp(LED_ID_XW_FRONT_PANEL, LED_MGR_OP_BLINK, LED_MGR_COLOR_AMBER);
       LEDMGR_LOG_INFO("Led State = LED_MGR_STATE_TROUBLE_CONNECTING");
+      t2_event_d("LED_INFO_CONNBad", 1);
       break;
     case LED_MGR_STATE_NOT_PROVISIONED:
       /* camera not provisioned */
@@ -388,6 +392,7 @@ ledMgrErr_t ledmgr_setState(ledMgrState_t state)
       ledmgr_setOp(LED_ID_CAMERA_FRONT_PANEL, LED_MGR_OP_SOLID_LIGHT, LED_MGR_COLOR_BLUE);
       led_xw_setOp(LED_ID_XW_FRONT_PANEL, LED_MGR_OP_SOLID_LIGHT, LED_MGR_COLOR_BLUE);
       LEDMGR_LOG_INFO("Led State = LED_MGR_STATE_WORKING_NORMALLY");
+      t2_event_d("LED_INFO_CONNGood", 1);
       break;
     case LED_MGR_STATE_2_WAY_VOICE:
       /* two way voice state */

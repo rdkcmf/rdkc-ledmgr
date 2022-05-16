@@ -62,6 +62,9 @@ logLevel loglevelspecify=logLevel_Debug;
 char* gateway = NULL;
 #include "ledmgr_rtmsg.h"
 
+/* Telemetry 2.0 */
+#include "telemetry_busmessage_sender.h"
+
 /*! Event states associated with WiFi connection  */
 typedef enum _WiFiStatusCode_t {
     WIFI_UNINSTALLED = 0,                                           /* !< The device was in an installed state, and was uninstalled */
@@ -519,6 +522,7 @@ int main(int argc, char* argv[])
   int xw_next_state = 0;
 
   ledmgr_init();
+  t2_init("ledmgr");
 
  #ifdef ENABLE_RTMESSAGE
   rtConnection_init();
@@ -536,7 +540,10 @@ int main(int argc, char* argv[])
     if ((next_state != cur_state) || (xw_current_state != xw_next_state))
     {
         LEDMGR_LOG_INFO("Current state %d Next state %d ", cur_state, next_state);
-        LEDMGR_LOG_INFO("xw current state %d next state %d", xw_current_state, xw_next_state);
+        LEDMGR_LOG_INFO("xw current state : %d", xw_current_state);
+        LEDMGR_LOG_INFO("xw next state : %d", xw_next_state);
+        t2_event_d("SYS_ERR_XW4ConnCurr_split", xw_current_state);
+        t2_event_d("SYS_ERR_XW4ConnNext_split", xw_next_state);
         err = ledmgr_setState(next_state);
         //handle error 
         cur_state = next_state;
