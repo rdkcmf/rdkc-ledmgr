@@ -25,6 +25,7 @@
 #include <pthread.h>
 #include <signal.h>
 #include <string.h>
+#include <time.h>
 
 #include "ledmgr.h"
 #include "ledmgrlogger.h"
@@ -36,6 +37,7 @@ extern "C"{
 #include "conf_sec.h"
 #include "sysUtils.h"
 #include "secure_wrapper.h"
+#include "connectivity_finder.h"
 #ifdef __cplusplus
 }
 #endif
@@ -57,6 +59,7 @@ logLevel loglevelspecify=logLevel_Debug;
 #define RTROUTED_ADDRESS "tcp://127.0.0.1:10001"
 #endif
 
+char* gateway = NULL;
 #include "ledmgr_rtmsg.h"
 
 /*! Event states associated with WiFi connection  */
@@ -84,6 +87,8 @@ static void logDestinationFromString(char const* s);
 
 int bt_state = 0;
 int audio_state = 0;
+MODE captive_state;
+int sleep_time = 1;
 
 #ifdef ENABLE_RTMESSAGE
 static rtConnection led_con = NULL;
@@ -354,17 +359,32 @@ static bool is_camera_connected()
 {
     //if ((system("ping -c 3 8.8.8.8") == 0) || (wifiState == WIFI_CONNECTED))
     /* Changing ping to gateway instead of google server to determine status RDKC-6201 */
-    char* gateway = getDefaultGateway();
-    //char cmdbuf[256];
     if (gateway != NULL)
     {
-      //snprintf(cmdbuf, sizeof(cmdbuf), "ping -c 3 %s -W 5 > /dev/null", gateway);
-      //if (system(cmdbuf) == 0)
       if (v_secure_system("ping -c 3 %s -W 5 > /dev/null", gateway) == 0)
       {
         LEDMGR_LOG_DEBUG("Camera is connected");
+        sleep_time = 1;
+        LEDMGR_LOG_DEBUG("Sleep time : %d", sleep_time);
         return true;
       }
+      else
+      {
+        sleep_time = 15;
+        LEDMGR_LOG_DEBUG("Sleep time : %d", sleep_time);
+        captive_state = stateFinder();
+        LEDMGR_LOG_INFO("Captive portal check - captive_state: %d", captive_state);
+        if (captive_state != DISCONNECTED_STATE)
+        {
+          LEDMGR_LOG_DEBUG("Bkp logic check : Camera is connected");
+          return true;
+        }
+      }
+    }
+    else
+    {
+       LEDMGR_LOG_DEBUG("Gateway is NULL\n");
+       gateway = getDefaultGateway();
     }
     LEDMGR_LOG_DEBUG("Camera is not connected");
     return false;
@@ -485,6 +505,7 @@ int main(int argc, char* argv[])
   ledMgrState_t next_state = LED_MGR_STATE_BOOT_UP;
   ledMgrState_t cur_state = LED_MGR_STATE_UNKNOWN;
   ledMgrErr_t err;
+  gateway = getDefaultGateway();
 
 #ifdef BREAKPAD
     sleep(1);
@@ -522,7 +543,7 @@ int main(int argc, char* argv[])
         xw_current_state = xw_next_state;
     }
     next_state = (*get_next_state[cur_state])();
-    sleep(1); //one second sleep
+    sleep(sleep_time); //Sleep time will be 1 sec or 15 sec based on camera connected or disconnected state
   }while(loop == 1);
 
 #ifdef ENABLE_RTMESSAGE  
